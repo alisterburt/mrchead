@@ -14,9 +14,9 @@ cli = typer.Typer()
 def human_filesize(num, suffix="B"):
     for unit in ["", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"]:
         if abs(num) < 1024.0:
-            return f"{num:3.1f} {unit}{suffix}"
+            return f"{num:3.1f}",  f"{unit}{suffix}"
         num /= 1024.0
-    return f"{num:.1f}Yi{suffix}"
+    return f"{num:.1f}", f"Yi{suffix}"
 
 
 @cli.command()
@@ -26,18 +26,19 @@ def mrchead(file: Path):
         header = mrc.header
         voxel_size = mrc.voxel_size
     size_on_disk = file.stat().st_size
+    filesize, unit = human_filesize(size_on_disk)
 
     table = Table(title=f'Header for {file.name}')
 
     table.add_column("Attribute(s)", style='cyan', justify='right')
     table.add_column("Value(s)", style='magenta', justify='right')
 
-    image_shape_str = f'{header.nx:5d} {header.ny:5d} {header.nz:5d}'
-    voxel_size_str = f'{voxel_size.x:.3f} {voxel_size.y:.3f} {voxel_size.z:.3f}'
+    image_shape_str = f'{header.nx:5d} {header.ny:5d} {header.nz:5d}  [bold cyan]px'
+    voxel_size_str = f'{voxel_size.x:.3f} {voxel_size.y:.3f} {voxel_size.z:.3f}   [bold cyan]Å'
 
-    table.add_row("size on disk", human_filesize(size_on_disk))
     table.add_row("image shape: nx | ny | nz", image_shape_str)
-    table.add_row("spacing (Å): dx | dy | dz", voxel_size_str)
+    table.add_row("spacing: dx | dy | dz", voxel_size_str)
+    table.add_row("size on disk", f"{filesize} [bold cyan]{unit}")
 
     print('\n', table)
 
